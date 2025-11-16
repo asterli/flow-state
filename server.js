@@ -10,45 +10,66 @@ app.use(express.static('public'));
 
 app.get('/api/search', async (req, res) => {
     const { lat, lng, types } = req.query;
-
     const searchTypes = types ? types.split(',') : ['cafe', 'library'];
 
     try {
-        const allResults = [];
-        
-        for (const type of searchTypes) {
-            const response = await axios.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', {
-                params: {
-                    location: `${lat},${lng}`,
-                    radius: 3000,
-                    type: type,
-                    keyword: type === 'cafe' ? 'wifi study' : '',
-                    key: process.env.GOOGLE_MAPS_API_KEY
+        // Make ALL requests at once instead of one-by-one
+        const promises = searchTypes.map(type => 
+            axios.post(
+                'https://places.googleapis.com/v1/places:searchNearby',
+                {
+                    includedTypes: [type === 'cafe' ? 'coffee_shop' : type],
+                    maxResultCount: 20,
+                    locationRestriction: {
+                        circle: {
+                            center: {
+                                latitude: parseFloat(lat),
+                                longitude: parseFloat(lng)
+                            },
+                            radius: 3000.0
+                        }
+                    }
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
+                        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.priceLevel,places.currentOpeningHours,places.types,places.id'
+                    }
                 }
-            });
-          
-            if (response.data.results) {
-                allResults.push(...response.data.results);
+            ).catch(err => {
+                console.error(`Error fetching ${type}:`, err.message);
+                return { data: { places: [] } };
+            })
+        );
+
+        // Wait for all requests to finish together
+        const responses = await Promise.all(promises);
+        
+        const allResults = [];
+        responses.forEach(response => {
+            if (response.data.places) {
+                allResults.push(...response.data.places);
             }
-        }
+        });
         
         const uniqueResults = allResults.filter((place, index, self) =>
-            index === self.findIndex(p => p.place_id === place.place_id)
+            index === self.findIndex(p => p.id === place.id)
         );
         
         const formattedResults = uniqueResults.map(place => ({
-            id: place.place_id,
-            name: place.name,
+            id: place.id,
+            name: place.displayName?.text || 'Unknown',
             rating: place.rating || 0,
-            user_ratings_total: place.user_ratings_total || 0,
-            vicinity: place.vicinity,
+            user_ratings_total: place.userRatingCount || 0,
+            vicinity: place.formattedAddress || '',
             location: {
-                lat: place.geometry.location.lat,
-                lng: place.geometry.location.lng
+                lat: place.location?.latitude,
+                lng: place.location?.longitude
             },
-            price_level: place.price_level,
-            open_now: place.opening_hours?.open_now,
-            types: place.types // Shows if it's cafe, library, etc.
+            price_level: place.priceLevel,
+            open_now: place.currentOpeningHours?.openNow,
+            types: place.types
         }));
         
         res.json({
@@ -58,8 +79,11 @@ app.get('/api/search', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('Error:', error.message);
-        res.status(500).json({ error: 'Failed to fetch study spots' });
+        console.error('Error:', error.response?.data || error.message);
+        res.status(500).json({ 
+            error: 'Failed to fetch study spots',
+            details: error.response?.data || error.message
+        });
     }
 });
 
