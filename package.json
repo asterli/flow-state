@@ -8,9 +8,12 @@
         "dev": "node server.js"
     },
     "keywords": [
+        "study",
+        "library",
         "coffee",
         "maps",
-        "places"
+        "places",
+        "coworking"
     ],
     "author": "",
     "license": "ISC",
