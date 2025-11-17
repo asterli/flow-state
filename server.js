@@ -4,7 +4,12 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: [
+        'https://asterli.github.io',
+        'http://localhost:3000'
+    ]
+}));
 app.use(express.json());
 app.use(express.static('public'));
 

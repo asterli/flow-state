@@ -5,7 +5,8 @@
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
-        "dev": "node server.js"
+        "dev": "node server.js",
+        "deploy": "gh-pages -d public"
     },
     "keywords": [
         "study",
@@ -30,5 +31,8 @@
     "bugs": {
         "url": "https://github.com/asterli/flow-state/issues"
     },
-    "homepage": "https://github.com/asterli/flow-state#readme"
+    "homepage": "https://asterli.github.io/flow-state",
+    "devDependencies": {
+        "gh-pages": "^6.3.0"
+    }
 }

@@ -1,7 +1,7 @@
 const { useState } = React;
 
 // API URL
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://flow-state-yvuz.onrender.com/api';
 
 // Header
 function Header() {
@@ -65,7 +65,7 @@ function SearchBar({ onSearch, loading }) {
 
     const geocodeAddress = async (address) => {
         try {
-            const response = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`);
+            const response = await fetch(`${API_BASE_URL}/geocode?address=${encodeURIComponent(address)}`);
             const data = await response.json();
             
             if (data.status === 'success' && data.location) {
