@@ -148,12 +148,43 @@ app.get('/api/search', async (req, res) => {
             types: place.types || []
         }));
         
-        console.log(`✅ Returning ${formattedResults.length} results`);
-        
+        // Filter out fast food chains and non-study-friendly places
+        const studyFriendlyResults = formattedResults.filter(place => {
+            const name = place.name.toLowerCase();
+            
+            // List of chains to exclude
+            const excludedChains = [
+                'mcdonald',
+                'mcdonalds',
+                'burger king',
+                'taco bell',
+                'wendy',
+                'kfc',
+                'popeyes',
+                'chick-fil-a',
+                'subway',
+                'arby',
+                'jack in the box',
+                'carl\'s jr',
+                'in-n-out',
+                'five guys',
+                'chipotle',
+                'panda express',
+                'del taco'
+            ];
+            
+            // Check if the name contains any excluded chain
+            const isExcluded = excludedChains.some(chain => name.includes(chain));
+            
+            return !isExcluded;
+        });
+
+        console.log(`✅ Filtered to ${studyFriendlyResults.length} study-friendly results`);
+
         res.json({
             status: 'success',
-            count: formattedResults.length,
-            results: formattedResults
+            count: studyFriendlyResults.length,
+            results: studyFriendlyResults
         });
         
     } catch (error) {
