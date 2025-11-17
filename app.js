@@ -1,7 +1,7 @@
 const { useState } = React;
 
 // API URL
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://flow-state-yvuz.onrender.com/api';
 
 // Header
 function Header() {
